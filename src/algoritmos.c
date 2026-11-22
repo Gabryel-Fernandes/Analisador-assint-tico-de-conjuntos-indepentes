@@ -27,7 +27,6 @@ int forcaBruta(Grafo *g, int melhor_conjunto[]) {
             }
         }
 
-        // Verifica se é independente contando as instruções
         bool valido = true;
         for (int i = 0; i < tam_atual && valido; i++) {
             for (int j = i + 1; j < tam_atual; j++) {
