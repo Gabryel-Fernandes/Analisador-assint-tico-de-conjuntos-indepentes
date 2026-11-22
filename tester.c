@@ -3,8 +3,8 @@
 #include <stdbool.h>
 #include <time.h>
 
-#define MAX_V 100       
-#define MAX_DP_V 22     
+#define MAX_V 500       
+#define MAX_DP_V 28    
 
 typedef struct {
     int V;
@@ -101,15 +101,20 @@ bool ehIndependente(Grafo *g, int subconjunto[], int tamanho) {
 // MÉTODO 1: FORÇA BRUTA - Complexidade: O(2^V * V^2)
 
 int forcaBruta(Grafo *g, int melhor_conjunto[]) {
+    if (g->V > 63) {
+        printf("\n[LIMITE DE HARDWARE] 2^%d estoura o limite de 64 bits da CPU.\n", g->V);
+        return -1;
+    }
+
     int max_tam = 0;
     int atual[MAX_V];
-    long long total_combinacoes = 1LL << g->V;
+    unsigned long long total_combinacoes = 1ULL << g->V;
 
-    for (long long mask = 0; mask < total_combinacoes; mask++) {
+    for (unsigned long long mask = 0; mask < total_combinacoes; mask++) {
         int tam_atual = 0;
         for (int i = 0; i < g->V; i++) {
             contador_instrucoes++;
-            if ((mask & (1LL << i)) != 0) {
+            if ((mask & (1ULL << i)) != 0) {
                 atual[tam_atual++] = i;
             }
         }
@@ -244,33 +249,32 @@ int programacaoDinamica(Grafo *g, int melhor_conjunto[]) {
         return -1;
     }
 
-    int total_estados = 1 << g->V;
+    unsigned int total_estados = 1U << g->V;
     char *dp = (char *)calloc(total_estados, sizeof(char));
     if (!dp) {
         printf("\n[ERRO] Falha ao alocar memoria para tabela DP.\n");
         return -1;
     }
 
-    int vizinhos_mask[MAX_DP_V] = {0};
+    unsigned int vizinhos_mask[MAX_DP_V] = {0};
     for (int i = 0; i < g->V; i++) {
         for (int j = 0; j < g->V; j++) {
             contador_instrucoes++;
             if (g->adj[i][j] == 1) {
-                vizinhos_mask[i] |= (1 << j);
+                vizinhos_mask[i] |= (1U << j);
             }
         }
     }
 
     dp[0] = 1;
     int max_tam = 0;
-    int melhor_mask = 0;
+    unsigned int melhor_mask = 0;
 
-    for (int mask = 1; mask < total_estados; mask++) {
+    for (unsigned int mask = 1; mask < total_estados; mask++) {
         contador_instrucoes++;
         
         int v = __builtin_ctz(mask);
-        int sub_anterior = mask ^ (1 << v);
-
+        unsigned int sub_anterior = mask ^ (1U << v);
 
         if (dp[sub_anterior] && ((sub_anterior & vizinhos_mask[v]) == 0)) {
             dp[mask] = 1;
@@ -284,7 +288,7 @@ int programacaoDinamica(Grafo *g, int melhor_conjunto[]) {
 
     int idx = 0;
     for (int i = 0; i < g->V; i++) {
-        if ((melhor_mask & (1 << i)) != 0) {
+        if ((melhor_mask & (1U << i)) != 0) {
             melhor_conjunto[idx++] = i;
         }
     }
@@ -349,7 +353,6 @@ int heuristicaBuscaLocal(Grafo *g, int melhor_conjunto[]) {
     while (melhorou) {
         melhorou = false;
 
-       
         for (int i = 0; i < tam && !melhorou; i++) {
             int u = melhor_conjunto[i];
             na_solucao[u] = false;
@@ -370,7 +373,6 @@ int heuristicaBuscaLocal(Grafo *g, int melhor_conjunto[]) {
                 }
             }
 
-            
             for (int a = 0; a < num_cand && !melhorou; a++) {
                 for (int b = a + 1; b < num_cand && !melhorou; b++) {
                     contador_instrucoes++;
@@ -422,44 +424,44 @@ void rodarBateriaComparativa(Grafo *g, int k) {
     printf("%-25s | %-8s | %-10s | %-18s | %-12s\n", "Estrategia", "Tam.", "Resp(>=k)", "Instrucoes", "Tempo (ms)");
     printf("--------------------------------------------------------------------------\n");
 
-    // 1. Força Bruta (apenas se V <= 24 para não travar a apresentação)
-    if (g->V <= 24) {
+    // 1. Força Bruta (limite expandido para 27)
+    if (g->V <= 27) {
         contador_instrucoes = 0; ini = clock();
         res = forcaBruta(g, sol);
         fim = clock(); ms = ((double)(fim - ini) / CLOCKS_PER_SEC) * 1000.0;
         printf("%-25s | %-8d | %-10s | %-18lld | %-12.4f\n", "1. Forca Bruta", res, (res >= k ? "SIM" : "NAO"), contador_instrucoes, ms);
     } else {
-        printf("%-25s | %-8s | %-10s | %-18s | %-12s\n", "1. Forca Bruta", "N/A", "PULADO", "V > 24 (Inviavel)", "-");
+        printf("%-25s | %-8s | %-10s | %-18s | %-12s\n", "1. Forca Bruta", "N/A", "PULADO", "V > 27 (Inviavel)", "-");
     }
 
-    // 2. Backtracking
-    if (g->V <= 45) {
+    // 2. Backtracking (limite expandido para 60)
+    if (g->V <= 60) {
         contador_instrucoes = 0; ini = clock();
         res = backtracking(g, sol);
         fim = clock(); ms = ((double)(fim - ini) / CLOCKS_PER_SEC) * 1000.0;
         printf("%-25s | %-8d | %-10s | %-18lld | %-12.4f\n", "2. Backtracking", res, (res >= k ? "SIM" : "NAO"), contador_instrucoes, ms);
     } else {
-        printf("%-25s | %-8s | %-10s | %-18s | %-12s\n", "2. Backtracking", "N/A", "PULADO", "V > 45 (Inviavel)", "-");
+        printf("%-25s | %-8s | %-10s | %-18s | %-12s\n", "2. Backtracking", "N/A", "PULADO", "V > 60 (Inviavel)", "-");
     }
 
-    // 3. Divisão e Conquista
-    if (g->V <= 40) {
+    // 3. Divisão e Conquista (limite expandido para 55)
+    if (g->V <= 55) {
         contador_instrucoes = 0; ini = clock();
         res = divisaoEConquista(g, sol);
         fim = clock(); ms = ((double)(fim - ini) / CLOCKS_PER_SEC) * 1000.0;
         printf("%-25s | %-8d | %-10s | %-18lld | %-12.4f\n", "3. Divisao e Conquista", res, (res >= k ? "SIM" : "NAO"), contador_instrucoes, ms);
     } else {
-        printf("%-25s | %-8s | %-10s | %-18s | %-12s\n", "3. Divisao e Conquista", "N/A", "PULADO", "V > 40 (Inviavel)", "-");
+        printf("%-25s | %-8s | %-10s | %-18s | %-12s\n", "3. Divisao e Conquista", "N/A", "PULADO", "V > 55 (Inviavel)", "-");
     }
 
-    // 4. Programação Dinâmica
+    // 4. Programação Dinâmica (usa MAX_DP_V = 28)
     if (g->V <= MAX_DP_V) {
         contador_instrucoes = 0; ini = clock();
         res = programacaoDinamica(g, sol);
         fim = clock(); ms = ((double)(fim - ini) / CLOCKS_PER_SEC) * 1000.0;
         printf("%-25s | %-8d | %-10s | %-18lld | %-12.4f\n", "4. Prog. Dinamica", res, (res >= k ? "SIM" : "NAO"), contador_instrucoes, ms);
     } else {
-        printf("%-25s | %-8s | %-10s | %-18s | %-12s\n", "4. Prog. Dinamica", "N/A", "PULADO", "V > 22 (Memoria)", "-");
+        printf("%-25s | %-8s | %-10s | %-18s | %-12s\n", "4. Prog. Dinamica", "N/A", "PULADO", "V > 28 (Memoria)", "-");
     }
 
     // 5. Guloso
@@ -499,7 +501,7 @@ int main() {
         printf("   6. Forca Bruta\n");
         printf("   7. Backtracking com Poda\n");
         printf("   8. Divisao e Conquista (Componentes + Reducao)\n");
-        printf("   9. Programacao Dinamica (Bitmask DP - max 22 vertices)\n");
+        printf("   9. Programacao Dinamica (Bitmask DP - max %d vertices)\n", MAX_DP_V);
         printf("  10. Algoritmo Guloso (Menor Grau)\n");
         printf("  11. Heuristica (Busca Local / Hill Climbing 1-por-2)\n");
         printf("----------------------------------------------------------------------------\n");
@@ -543,7 +545,7 @@ int main() {
                 imprimirMatriz(&g);
                 break;
             case 6:
-                if (g.V > 24) {
+                if (g.V > 27) {
                     printf("[AVISO] V=%d pode demorar muito. Continuar? (1-Sim / 0-Nao): ", g.V);
                     int c; scanf("%d", &c); if (!c) break;
                 }
