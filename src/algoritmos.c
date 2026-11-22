@@ -5,9 +5,8 @@
 
 long long contador_instrucoes = 0;
 
-// ============================================================================
+
 // MÉTODO 1: FORÇA BRUTA - Complexidade: O(2^V * V^2)
-// ============================================================================
 int forcaBruta(Grafo *g, int melhor_conjunto[]) {
     if (g->V > 63) {
         printf("\n[LIMITE DE HARDWARE] 2^%d estoura o limite de 64 bits da CPU.\n", g->V);
@@ -46,9 +45,8 @@ int forcaBruta(Grafo *g, int melhor_conjunto[]) {
     return max_tam;
 }
 
-// ============================================================================
+
 // MÉTODO 2: BACKTRACKING COM PODA - Complexidade: O(2^V) no pior caso
-// ============================================================================
 void backtrackRec(Grafo *g, int v_atual, int atual[], int tam_atual, int *max_tam, int melhor_conjunto[]) {
     contador_instrucoes++;
 
@@ -88,9 +86,8 @@ int backtracking(Grafo *g, int melhor_conjunto[]) {
     return max_tam;
 }
 
-// ============================================================================
+
 // MÉTODO 3: DIVISÃO E CONQUISTA
-// ============================================================================
 void dfsComponente(Grafo *g, int u, bool visitado[], int comp[], int *tam_comp) {
     visitado[u] = true;
     comp[(*tam_comp)++] = u;
@@ -159,9 +156,8 @@ int divisaoEConquista(Grafo *g, int melhor_conjunto[]) {
     return total_solucao;
 }
 
-// ============================================================================
+
 // MÉTODO 4: PROGRAMAÇÃO DINÂMICA - Complexidade: O(2^V * V)
-// ============================================================================
 int programacaoDinamica(Grafo *g, int melhor_conjunto[]) {
     if (g->V > MAX_DP_V) {
         printf("\n[ERRO] PD com Bitmask exige muita memoria (limite: %d vertices).\n", MAX_DP_V);
@@ -215,9 +211,8 @@ int programacaoDinamica(Grafo *g, int melhor_conjunto[]) {
     return max_tam;
 }
 
-// ============================================================================
+
 // MÉTODO 5: ALGORITMO GULOSO - Complexidade: O(V^2)
-// ============================================================================
 int guloso(Grafo *g, int melhor_conjunto[]) {
     bool removido[MAX_V] = {false};
     int tam_solucao = 0;
@@ -260,9 +255,7 @@ int guloso(Grafo *g, int melhor_conjunto[]) {
     return tam_solucao;
 }
 
-// ============================================================================
 // MÉTODO 6: HEURÍSTICA (Busca Local 1-por-2)
-// ============================================================================
 int heuristicaBuscaLocal(Grafo *g, int melhor_conjunto[]) {
     int tam = guloso(g, melhor_conjunto);
     bool na_solucao[MAX_V] = {false};
